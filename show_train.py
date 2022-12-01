@@ -2,8 +2,8 @@ import pandas as pd
 from PIL import Image
 from matplotlib import pyplot as plt
 
-train_path = "train_normal.csv"
-train = pd.read_csv(train_path, index_col=False)
+
+train = pd.read_csv("train_normal.csv", index_col=False)
 
 for i in range(len(train)):
     filename = train["filename"][i]
