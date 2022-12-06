@@ -1,7 +1,7 @@
 import pandas as pd
 from PIL import Image
 
-train = pd.read_csv("train.csv")
+train = pd.read_csv("files/train.csv")
 
 for i in range(len(train)):
     filename = train["filename"][i]
@@ -11,4 +11,4 @@ for i in range(len(train)):
     train.iloc[i, 1:] *= k
     image_normal.save("train_normal/" + filename)
 
-train.to_csv("train_normal.csv", index=False)
+train.to_csv("files/train_normal.csv", index=False)

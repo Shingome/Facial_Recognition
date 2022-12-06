@@ -5,7 +5,7 @@ import os
 import tensorflow as tf
 
 
-train = pd.read_csv("train_normal.csv")
+train = pd.read_csv("files/train_normal.csv")
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 images = []
@@ -20,5 +20,5 @@ for i in range(len(train)):
 images = np.asarray(images)
 values = np.asarray(values)
 
-np.save("x.npy", images, allow_pickle=True)
-np.save("y.npy", values, allow_pickle=True)
+np.save("files/x.npy", images, allow_pickle=True)
+np.save("files/y.npy", values, allow_pickle=True)
