@@ -1,6 +1,5 @@
 import keras
 import os
-import numpy as np
 import pandas as pd
 from keras.losses import MeanSquaredError
 from keras.layers import Conv2D, MaxPooling2D, Dropout, Flatten, Dense, InputLayer, Rescaling
@@ -18,10 +17,6 @@ if __name__ == "__main__":
 
     dataset_train = tf.data.experimental.load("files/dataset_train")
     dataset_val = tf.data.experimental.load("files/dataset_val")
-
-    print(int(dataset_val.cardinality()))
-
-    exit()
 
     model = keras.Sequential()
     model.add(InputLayer((280, 280, 3)))
@@ -44,9 +39,8 @@ if __name__ == "__main__":
 
     model.compile(optimizer='adam', loss=MeanSquaredError(), metrics=['accuracy'])
 
-    history = model.fit(x=x_train,
-                        y=y_train,
-                        validation_data=(x_val, y_val),
+    history = model.fit(dataset_train,
+                        # validation_data=dataset_val,
                         epochs=10,
                         shuffle=True,
                         batch_size=32)

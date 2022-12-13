@@ -8,6 +8,8 @@ for i in range(len(train)):
     image = Image.open("train/" + filename).convert("RGB")
     image_normal = image.resize((280, 280))
     k = 280 / image.size[0]
+    filename = str(i).zfill(6) + ".jpg"
+    train.iloc[i, 0] = filename
     train.iloc[i, 1:] *= k
     image_normal.save("train_normal/" + filename)
 

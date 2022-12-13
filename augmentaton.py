@@ -1,8 +1,8 @@
+import pandas as pd
 import math
 import albumentations as al
 import numpy as np
 import cv2
-import tensorflow as tf
 import os
 
 
@@ -41,11 +41,12 @@ transform = al.Compose([
     keypoint_params=al.KeypointParams(format='xy', remove_invisible=False),
     p=1)
 
-x = np.load("files/x.npy", allow_pickle=True)
-y = np.load("files/y.npy", allow_pickle=True)
+train = pd.read_csv("files/train_normal.csv")
+train_aug = {"images": [], "labels": []}
 
-images = []
-values = []
+print(train)
+
+exit()
 
 for i in range(20000):
     print(i)
@@ -56,20 +57,3 @@ for i in range(20000):
     image = transformed['image']
     keypoints = np.asarray(transformed['keypoints']).T
     keypoints = change_keypoits(keypoints)
-    images.append(image)
-    values.append(keypoints)
-
-images = np.asarray(images)
-values = np.asarray(values)
-
-images_train = np.vstack((images[:19500], x[:4500]))
-values_train = np.vstack((values[:19500], y[:4500]))
-
-images_val = np.vstack((images[19500:], x[4500:]))
-values_val = np.vstack((values[19500:], y[4500:]))
-
-dataset_train = tf.data.Dataset.from_tensor_slices((images_train, values_train))
-dataset_val = tf.data.Dataset.from_tensor_slices((images_val, values_val))
-
-tf.data.experimental.save(dataset_train, "files/dataset_train")
-tf.data.experimental.save(dataset_val, "files/dataset_val")
