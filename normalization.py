@@ -11,6 +11,6 @@ for i in range(len(train)):
     filename = str(i).zfill(6) + ".jpg"
     train.iloc[i, 0] = filename
     train.iloc[i, 1:] *= k
-    image_normal.save("train_normal/" + filename)
+    image_normal.save("train_normal/1/" + filename)
 
 train.to_csv("files/train_normal.csv", index=False)

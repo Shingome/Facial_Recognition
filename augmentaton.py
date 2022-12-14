@@ -1,9 +1,11 @@
+from PIL import Image
 import pandas as pd
 import math
 import albumentations as al
 import numpy as np
 import cv2
 import os
+import glob
 
 
 def change_keypoits(keypoints):
@@ -42,18 +44,31 @@ transform = al.Compose([
     p=1)
 
 train = pd.read_csv("files/train_normal.csv")
-train_aug = {"images": [], "labels": []}
+labels = []
 
-print(train)
+files = glob.glob('train_aug/1/*')
+for f in files:
+    os.remove(f)
 
-exit()
-
-for i in range(20000):
+for i in range(5000):
     print(i)
-    image = x[i % 5000]
-    keypoints = y[i % 5000]
+    filename = train.iloc[i, 0]
+    image = Image.open("train_normal/1/" + filename)
+    image.save("train_aug/1/" + filename)
+
+for i in range(5000, 30000):
+    print(i)
+    filename = train.iloc[i % 5000, 0]
+    keypoints = train.iloc[i % 5000, 1:].to_numpy()
+    image = np.asarray(Image.open(f"train_aug/1/{filename}"))
     keypoints = np.asarray((keypoints[::2], keypoints[1::2])).T
     transformed = transform(image=image, keypoints=keypoints)
-    image = transformed['image']
-    keypoints = np.asarray(transformed['keypoints']).T
-    keypoints = change_keypoits(keypoints)
+    keypoints = change_keypoits(np.asarray(transformed['keypoints']).T)
+    image = Image.fromarray(transformed['image'], "RGB")
+    filename = str(i).zfill(6) + ".jpg"
+    labels.append(keypoints)
+    image.save("train_aug/1/" + filename)
+
+labels = np.vstack((train.iloc[::, 1:].to_numpy(), np.asarray(labels)))
+
+np.save("files/train_aug_labels.npy", labels)
