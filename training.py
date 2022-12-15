@@ -9,6 +9,7 @@ from keras.utils import image_dataset_from_directory
 from matplotlib import pyplot as plt
 import tensorflow as tf
 
+
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
@@ -23,7 +24,7 @@ def show_element(el):
 
 
 def get_dataset(subset):
-    train = np.load("files/train_aug_labels.npy")
+    train = np.load("files/train_aug_values.npy")
     return image_dataset_from_directory(directory="train_aug",
                                         labels=list(train),
                                         image_size=(280, 280),
@@ -47,27 +48,30 @@ if __name__ == "__main__":
 
     model = keras.Sequential()
     model.add(InputLayer((280, 280, 3)))
-    model.add(Rescaling(1. / 255))
     model.add(Conv2D(16, (3, 3), activation='relu'))
     model.add(MaxPooling2D(pool_size=(3, 3)))
+    model.add(Dropout(0.1))
     model.add(Conv2D(32, (3, 3), activation='relu'))
     model.add(MaxPooling2D(pool_size=(3, 3)))
+    model.add(Dropout(0.1))
     model.add(Conv2D(64, (3, 3), activation='relu'))
     model.add(MaxPooling2D(pool_size=(3, 3)))
+    model.add(Dropout(0.1))
     model.add(Flatten())
+    model.add(Dense(4096, activation='relu'))
+    model.add(Dense(2048, activation='relu'))
     model.add(Dense(1024, activation='relu'))
     model.add(Dense(512, activation='relu'))
     model.add(Dense(256, activation='relu'))
     model.add(Dense(128, activation='relu'))
     model.add(Dense(64, activation='relu'))
     model.add(Dense(32, activation='relu'))
-    model.add(Dropout(0.5))
-    model.add(Dense(28, activation='relu'))
+    model.add(Dense(28, activation='linear'))
 
     model.compile(optimizer='adam', loss=MeanSquaredError(), metrics=['accuracy'])
 
     plot_model(model,
-               to_file="models/plot_ep10_aug_2.png",
+               to_file="models/plot_ep50_aug_8.png",
                show_dtype=True,
                show_shapes=True,
                show_layer_names=True,
@@ -75,12 +79,12 @@ if __name__ == "__main__":
 
     history = model.fit(train_ds,
                         validation_data=val_ds,
-                        epochs=10,
+                        epochs=50,
                         shuffle=True,
                         batch_size=32)
 
-    model.save("models/train_ep10_aug_2.h5", save_format="h5")
+    model.save("models/train_ep50_aug_8.h5", save_format="h5")
 
-    pd.DataFrame(history.history).plot(figsize=(8, 5))
+    pd.DataFrame(history.history).plot()
 
     plt.show()

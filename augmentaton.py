@@ -44,7 +44,7 @@ transform = al.Compose([
     p=1)
 
 train = pd.read_csv("files/train_normal.csv")
-labels = []
+values = []
 
 files = glob.glob('train_aug/1/*')
 for f in files:
@@ -66,9 +66,9 @@ for i in range(5000, 30000):
     keypoints = change_keypoits(np.asarray(transformed['keypoints']).T)
     image = Image.fromarray(transformed['image'], "RGB")
     filename = str(i).zfill(6) + ".jpg"
-    labels.append(keypoints)
+    values.append(keypoints)
     image.save("train_aug/1/" + filename)
 
-labels = np.vstack((train.iloc[::, 1:].to_numpy(), np.asarray(labels)))
+values = np.vstack((train.iloc[::, 1:].to_numpy(), np.asarray(values)))
 
-np.save("files/train_aug_labels.npy", labels)
+np.save("files/train_aug_values.npy", values)
