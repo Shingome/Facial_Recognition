@@ -8,19 +8,10 @@ from keras.utils.vis_utils import plot_model
 from keras.utils import image_dataset_from_directory
 from matplotlib import pyplot as plt
 import tensorflow as tf
-from keras import models
+
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
-
-
-def show_element(el):
-    x = el[1][0][::2]
-    y = el[1][0][1::2]
-    image = np.reshape(el[0], (280, 280, 3))
-    plt.imshow(image.astype(int))
-    plt.scatter(x, y)
-    plt.show()
 
 
 def get_dataset(subset):
@@ -38,16 +29,22 @@ def get_dataset(subset):
 def create_model():
     model = keras.Sequential()
     model.add(InputLayer((280, 280, 3)))
-    model.add(Conv2D(16, (3, 3), activation='relu'))
-    model.add(MaxPooling2D(pool_size=(3, 3)))
-    model.add(Conv2D(32, (3, 3), activation='relu'))
-    model.add(MaxPooling2D(pool_size=(3, 3)))
-    model.add(Conv2D(64, (3, 3), activation='relu'))
-    model.add(MaxPooling2D(pool_size=(3, 3)))
-    model.add(Conv2D(128, (3, 3), activation='relu'))
-    model.add(MaxPooling2D(pool_size=(3, 3)))
+    model.add(Conv2D(16, (2, 2), activation='relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Conv2D(32, (2, 2), activation='relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Conv2D(64, (2, 2), activation='relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Conv2D(128, (2, 2), activation='relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Conv2D(256, (2, 2), activation='relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Conv2D(512, (2, 2), activation='relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Conv2D(1024, (2, 2), activation='relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
     model.add(Flatten())
-    model.add(Dropout(0.1))
+    model.add(Dropout(0.25))
     model.add(Dense(4096, activation='relu'))
     model.add(Dense(28, activation='linear'))
     return model
@@ -66,6 +63,7 @@ if __name__ == "__main__":
 
     model = create_model()
 
+    # from keras import models
     # model = models.load_model("models/train_ep40_aug_13_2.h5")
 
     model.compile(optimizer='adam', loss=MeanSquaredError(), metrics=['accuracy'])
@@ -79,7 +77,7 @@ if __name__ == "__main__":
 
     history = model.fit(train_ds,
                         validation_data=val_ds,
-                        epochs=10,
+                        epochs=20,
                         shuffle=True,
                         batch_size=32)
 
