@@ -9,7 +9,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 if __name__ == "__main__":
-    model = models.load_model("models/train_ep50_aug_8.h5")
+    model = models.load_model("models/train_ep20_1.h5")
     files = glob.glob('test_normal/*.jpg')
     for filename in files:
         image = Image.open(filename)

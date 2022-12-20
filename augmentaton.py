@@ -23,22 +23,23 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 transform = al.Compose([
-    al.Downscale(scale_min=0.1, scale_max=0.25, interpolation=cv2.INTER_AREA, p=0.1),
-    al.Equalize(mode='cv', by_channels=True, p=0.1),
-    al.ColorJitter(brightness=0.5, contrast=0.5, saturation=0.5, hue=0.5, p=0.1),
-    al.ISONoise(color_shift=(0.3, 0.5), intensity=(0.3, 0.5), p=0.1),
-    al.PixelDropout(dropout_prob=0.03, p=0.1),
-    al.RandomFog(fog_coef_lower=0.3, fog_coef_upper=1, alpha_coef=0.08, p=0.1),
-    al.RandomGamma(gamma_limit=(20, 180), p=0.1),
+    al.Downscale(scale_min=0.1, scale_max=0.25, interpolation=cv2.INTER_AREA, p=0.2),
+    al.Equalize(mode='cv', by_channels=True, p=0.2),
+    al.ColorJitter(brightness=0.5, contrast=0.5, saturation=0.5, hue=0.5, p=0.2),
+    al.ISONoise(color_shift=(0.3, 0.5), intensity=(0.3, 0.5), p=0.2),
+    al.PixelDropout(dropout_prob=0.03, p=0.2),
+    al.RandomFog(fog_coef_lower=0.3, fog_coef_upper=1, alpha_coef=0.08, p=0.2),
+    al.RandomGamma(gamma_limit=(20, 180), p=0.2),
     al.RandomRain(slant_lower=-10, slant_upper=10, drop_length=20, drop_width=1, drop_color=(200, 200, 200),
-                  blur_value=7, brightness_coefficient=0.7, p=0.1),
+                  blur_value=7, brightness_coefficient=0.7, p=0.2),
     al.RandomShadow(shadow_roi=(0, 0.5, 1, 1), num_shadows_lower=1, num_shadows_upper=2,
-                    shadow_dimension=5, p=0.1),
-    al.RandomSnow(snow_point_lower=0.05, snow_point_upper=0.15, brightness_coeff=2, p=0.1),
-    al.HorizontalFlip(p=0.3),
-    al.VerticalFlip(p=0.3),
-    al.Rotate(p=0.6),
-    al.RandomCrop(240, 240, p=0.3),
+                    shadow_dimension=5, p=0.2),
+    al.RandomSnow(snow_point_lower=0.05, snow_point_upper=0.2, brightness_coeff=2, p=0.2),
+    al.InvertImg(p=0.5),
+    al.HorizontalFlip(p=0.5),
+    al.VerticalFlip(p=0.5),
+    al.Rotate(p=0.7),
+    al.RandomCrop(240, 240, p=0.4),
     al.Resize(280, 280, p=1)],
     keypoint_params=al.KeypointParams(format='xy', remove_invisible=False),
     p=1)
@@ -56,7 +57,7 @@ for i in range(5000):
     image = Image.open("train_normal/1/" + filename)
     image.save("train_aug/1/" + filename)
 
-for i in range(5000, 30000):
+for i in range(5000, 5001):
     print(i)
     filename = train.iloc[i % 5000, 0]
     keypoints = train.iloc[i % 5000, 1:].to_numpy()

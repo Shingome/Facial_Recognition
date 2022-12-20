@@ -8,7 +8,7 @@ from keras.utils.vis_utils import plot_model
 from keras.utils import image_dataset_from_directory
 from matplotlib import pyplot as plt
 import tensorflow as tf
-
+from keras import models
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
@@ -35,6 +35,24 @@ def get_dataset(subset):
                                         seed=100)
 
 
+def create_model():
+    model = keras.Sequential()
+    model.add(InputLayer((280, 280, 3)))
+    model.add(Conv2D(16, (3, 3), activation='relu'))
+    model.add(MaxPooling2D(pool_size=(3, 3)))
+    model.add(Conv2D(32, (3, 3), activation='relu'))
+    model.add(MaxPooling2D(pool_size=(3, 3)))
+    model.add(Conv2D(64, (3, 3), activation='relu'))
+    model.add(MaxPooling2D(pool_size=(3, 3)))
+    model.add(Conv2D(128, (3, 3), activation='relu'))
+    model.add(MaxPooling2D(pool_size=(3, 3)))
+    model.add(Flatten())
+    model.add(Dropout(0.1))
+    model.add(Dense(4096, activation='relu'))
+    model.add(Dense(28, activation='linear'))
+    return model
+
+
 if __name__ == "__main__":
     tf.get_logger().setLevel('ERROR')
 
@@ -46,32 +64,14 @@ if __name__ == "__main__":
     train_ds.cache()
     train_ds.prefetch(tf.data.AUTOTUNE)
 
-    model = keras.Sequential()
-    model.add(InputLayer((280, 280, 3)))
-    model.add(Conv2D(16, (3, 3), activation='relu'))
-    model.add(MaxPooling2D(pool_size=(3, 3)))
-    model.add(Dropout(0.1))
-    model.add(Conv2D(32, (3, 3), activation='relu'))
-    model.add(MaxPooling2D(pool_size=(3, 3)))
-    model.add(Dropout(0.1))
-    model.add(Conv2D(64, (3, 3), activation='relu'))
-    model.add(MaxPooling2D(pool_size=(3, 3)))
-    model.add(Dropout(0.1))
-    model.add(Flatten())
-    model.add(Dense(4096, activation='relu'))
-    model.add(Dense(2048, activation='relu'))
-    model.add(Dense(1024, activation='relu'))
-    model.add(Dense(512, activation='relu'))
-    model.add(Dense(256, activation='relu'))
-    model.add(Dense(128, activation='relu'))
-    model.add(Dense(64, activation='relu'))
-    model.add(Dense(32, activation='relu'))
-    model.add(Dense(28, activation='linear'))
+    model = create_model()
+
+    # model = models.load_model("models/train_ep40_aug_13_2.h5")
 
     model.compile(optimizer='adam', loss=MeanSquaredError(), metrics=['accuracy'])
 
     plot_model(model,
-               to_file="models/plot_ep50_aug_8.png",
+               to_file="models/plot_ep20_1.png",
                show_dtype=True,
                show_shapes=True,
                show_layer_names=True,
@@ -79,12 +79,21 @@ if __name__ == "__main__":
 
     history = model.fit(train_ds,
                         validation_data=val_ds,
-                        epochs=50,
+                        epochs=10,
                         shuffle=True,
                         batch_size=32)
 
-    model.save("models/train_ep50_aug_8.h5", save_format="h5")
+    model.save("models/train_ep20_1.h5", save_format="h5")
 
-    pd.DataFrame(history.history).plot()
+    history = pd.DataFrame(history.history)
+
+    figure, axis = plt.subplots(2, 1)
+
+    axis[0].plot(history['loss'], "b-", label="loss")
+    axis[0].plot(history['val_loss'], "r-", label="val_loss")
+    axis[0].legend()
+    axis[1].plot(history['accuracy'], "b-", label="accuracy")
+    axis[1].plot(history['val_accuracy'], "r-", label="val_accuracy")
+    axis[1].legend()
 
     plt.show()
