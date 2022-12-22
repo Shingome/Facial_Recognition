@@ -1,17 +1,16 @@
-import keras
+from keras import models
 import os
 import numpy as np
 import pandas as pd
 from keras.losses import MeanSquaredError
-from keras.layers import Conv2D, MaxPooling2D, Dropout, Flatten, Dense, InputLayer, Rescaling
+from keras.layers import Conv2D, MaxPooling2D, Dropout, Flatten, Dense,\
+    BatchNormalization, concatenate, Input, InputLayer
 from keras.utils.vis_utils import plot_model
 from keras.utils import image_dataset_from_directory
+from keras.models import Model
 from matplotlib import pyplot as plt
 import tensorflow as tf
-
-
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
+from sklearn.ensemble import AdaBoostRegressor
 
 
 def get_dataset(subset):
@@ -19,41 +18,114 @@ def get_dataset(subset):
     return image_dataset_from_directory(directory="train_aug",
                                         labels=list(train),
                                         image_size=(280, 280),
-                                        batch_size=32,
+                                        batch_size=8,
                                         color_mode="rgb",
                                         validation_split=0.1,
                                         subset=("training", "validation")[subset],
                                         seed=100)
 
 
-def create_model():
-    model = keras.Sequential()
-    model.add(InputLayer((280, 280, 3)))
-    model.add(Conv2D(16, (2, 2), activation='relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Conv2D(32, (2, 2), activation='relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Conv2D(64, (2, 2), activation='relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Conv2D(128, (2, 2), activation='relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Conv2D(256, (2, 2), activation='relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Conv2D(512, (2, 2), activation='relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Conv2D(1024, (2, 2), activation='relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
+def create_simple_model():
+    model = models.Sequential()
+    model.add(InputLayer((280, 280,  3)))
+    model.add(Conv2D(16, (5, 5)))
+    model.add(MaxPooling2D((2, 2), 2))
+    model.add(BatchNormalization())
+    model.add(Dropout(0.1))
+    model.add(Conv2D(32, (3, 3)))
+    model.add(MaxPooling2D((2, 2), 2))
+    model.add(BatchNormalization())
+    model.add(Dropout(0.2))
+    model.add(Conv2D(64, (3, 3)))
+    model.add(MaxPooling2D((2, 2), 2))
+    model.add(BatchNormalization())
+    model.add(Dropout(0.3))
+    model.add(Conv2D(128, (3, 3)))
+    model.add(MaxPooling2D((2, 2), 2))
+    model.add(BatchNormalization())
+    model.add(Dropout(0.4))
+    model.add(Conv2D(256, (1, 1)))
+    model.add(MaxPooling2D((2, 2), 2))
+    model.add(BatchNormalization())
+    model.add(Dropout(0.5))
     model.add(Flatten())
-    model.add(Dropout(0.25))
-    model.add(Dense(4096, activation='relu'))
+    model.add(Dense(8196, activation='relu'))
     model.add(Dense(28, activation='linear'))
     return model
 
 
-if __name__ == "__main__":
-    tf.get_logger().setLevel('ERROR')
+def create_two_brunch():
+    def create_part(first, kernel_size):
+        inp = first
+        part = Conv2D(32, kernel_size, activation='relu')(inp)
+        part = MaxPooling2D(pool_size=kernel_size)(part)
+        part = BatchNormalization()(part)
+        part = Conv2D(64, kernel_size, activation='relu')(part)
+        part = MaxPooling2D(pool_size=kernel_size)(part)
+        part = BatchNormalization()(part)
+        part = Conv2D(128, kernel_size, activation='relu')(part)
+        part = MaxPooling2D(pool_size=kernel_size)(part)
+        part = BatchNormalization()(part)
+        part = Dropout(0.25)(part)
+        return part
 
-    tf.config.list_physical_devices("GPU")
+    inp = Input((280, 280, 3))
+
+    part_1 = create_part(inp, (3, 3))
+    part_2 = create_part(inp, (3, 3))
+
+    output = concatenate([part_1, part_2])
+    output = Conv2D(512, (2, 2), activation='relu')(output)
+    output = MaxPooling2D(pool_size=(2, 2))(output)
+    output = BatchNormalization()(output)
+    output = Conv2D(1024, (2, 2), activation='relu')(output)
+    output = MaxPooling2D(pool_size=(2, 2))(output)
+    output = Dropout(0.25)(output)
+    output = BatchNormalization()(output)
+    output = Flatten()(output)
+    output = Dense(1024, activation='relu')(output)
+    output = Dense(28, activation='linear')(output)
+
+    model = Model(inputs=[inp], outputs=[output])
+    return model
+
+
+def create_three_brunch():
+    def create_brunch(input_layer):
+        inp = input_layer
+        part = Conv2D(16, (5, 5), activation='relu')(inp)
+        part = MaxPooling2D(pool_size=(2, 2))(part)
+        part = BatchNormalization()(part)
+        part = Conv2D(32, (3, 3), activation='relu')(part)
+        part = MaxPooling2D(pool_size=(2, 2))(part)
+        part = BatchNormalization()(part)
+        part = Dropout(0.1)(part)
+        return part
+
+    inp = Input((280, 280, 3))
+
+    brunch_1 = create_brunch(inp)
+    brunch_2 = create_brunch(inp)
+    brunch_3 = create_brunch(inp)
+
+    output = concatenate([brunch_1, brunch_2, brunch_3])
+    output = Flatten()(output)
+    output = Dense(28, activation='linear')(output)
+
+    model = Model(inputs=[inp], outputs=[output])
+    return model
+
+
+if __name__ == "__main__":
+    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+    os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
+    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+
+    print(gpu := tf.config.list_physical_devices("GPU"))
+
+    tf.config.experimental.set_memory_growth(gpu[0], True)
+
+    tf.keras.backend.clear_session()
 
     train_ds = get_dataset(0)
     val_ds = get_dataset(1)
@@ -61,15 +133,14 @@ if __name__ == "__main__":
     train_ds.cache()
     train_ds.prefetch(tf.data.AUTOTUNE)
 
-    model = create_model()
-
-    # from keras import models
-    # model = models.load_model("models/train_ep40_aug_13_2.h5")
+    model = create_three_brunch()
 
     model.compile(optimizer='adam', loss=MeanSquaredError(), metrics=['accuracy'])
 
+    # model = models.load_model("models/train_20_4.h5")
+
     plot_model(model,
-               to_file="models/plot_ep20_1.png",
+               to_file="models/plot_20_5.png",
                show_dtype=True,
                show_shapes=True,
                show_layer_names=True,
@@ -79,9 +150,13 @@ if __name__ == "__main__":
                         validation_data=val_ds,
                         epochs=20,
                         shuffle=True,
-                        batch_size=32)
+                        batch_size=8)
 
-    model.save("models/train_ep20_1.h5", save_format="h5")
+    model.save("models/train_20_5.h5", save_format="h5")
+
+    ev = model.evaluate(val_ds, verbose=0)
+
+    print("End = " + str(ev))
 
     history = pd.DataFrame(history.history)
 
