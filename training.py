@@ -18,40 +18,43 @@ def get_dataset(subset):
     return image_dataset_from_directory(directory="train_aug",
                                         labels=list(train),
                                         image_size=(280, 280),
-                                        batch_size=8,
+                                        batch_size=32,
                                         color_mode="rgb",
                                         validation_split=0.1,
                                         subset=("training", "validation")[subset],
                                         seed=100)
 
 
-def create_simple_model():
-    model = models.Sequential()
-    model.add(InputLayer((280, 280,  3)))
-    model.add(Conv2D(16, (5, 5)))
-    model.add(MaxPooling2D((2, 2), 2))
-    model.add(BatchNormalization())
-    model.add(Dropout(0.1))
-    model.add(Conv2D(32, (3, 3)))
-    model.add(MaxPooling2D((2, 2), 2))
-    model.add(BatchNormalization())
-    model.add(Dropout(0.2))
-    model.add(Conv2D(64, (3, 3)))
-    model.add(MaxPooling2D((2, 2), 2))
-    model.add(BatchNormalization())
-    model.add(Dropout(0.3))
-    model.add(Conv2D(128, (3, 3)))
-    model.add(MaxPooling2D((2, 2), 2))
-    model.add(BatchNormalization())
-    model.add(Dropout(0.4))
-    model.add(Conv2D(256, (1, 1)))
-    model.add(MaxPooling2D((2, 2), 2))
-    model.add(BatchNormalization())
-    model.add(Dropout(0.5))
-    model.add(Flatten())
-    model.add(Dense(8196, activation='relu'))
-    model.add(Dense(28, activation='linear'))
-    return model
+def create_cnn(inp):
+    x = InputLayer((280, 280,  3))(inp)
+    x = BatchNormalization()(x)
+    x = Conv2D(16, (6, 6), activation='relu')(x)
+    x = MaxPooling2D((2, 2), 2)(x)
+    x = BatchNormalization()(x)
+    x = Conv2D(32, (5, 5), activation='relu')(x)
+    x = MaxPooling2D((2, 2), 2)(x)
+    x = BatchNormalization()(x)
+    x = Conv2D(64, (4, 4), activation='relu')(x)
+    x = MaxPooling2D((2, 2), 2)(x)
+    x = BatchNormalization()(x)
+    x = Conv2D(128, (3, 3), activation='relu')(x)
+    x = MaxPooling2D((2, 2), 2)(x)
+    x = BatchNormalization()(x)
+    x = Conv2D(256, (2, 2), activation='relu')(x)
+    x = MaxPooling2D((2, 2), 2)(x)
+    x = BatchNormalization()(x)
+    x = Conv2D(512, (1, 1), activation='relu')(x)
+    x = MaxPooling2D((2, 2), 2)(x)
+    x = BatchNormalization()(x)
+    x = Conv2D(1024, (1, 1), activation='relu')(x)
+    x = MaxPooling2D((2, 2), 2)(x)
+    x = BatchNormalization()(x)
+    x = Dropout(0.5)(x)
+    x = Flatten()(x)
+    x = Dense(1024, activation='relu')(x)
+    x = Dense(1, activation='linear')(x)
+    return x
+
 
 
 def create_two_brunch():
@@ -89,7 +92,6 @@ def create_two_brunch():
     model = Model(inputs=[inp], outputs=[output])
     return model
 
-
 def create_three_brunch():
     def create_brunch(input_layer):
         inp = input_layer
@@ -116,6 +118,83 @@ def create_three_brunch():
     return model
 
 
+def create_three_14_brunch():
+    def L1(inp):
+        def branch(inp):
+            part = Conv2D(16, (5, 5), activation='relu')(inp)
+            part = MaxPooling2D(pool_size=(2, 2))(part)
+            part = BatchNormalization()(part)
+            part = Conv2D(32, (3, 3), activation='relu')(part)
+            part = MaxPooling2D(pool_size=(2, 2))(part)
+            part = BatchNormalization()(part)
+            part = Dropout(0.1)(part)
+            return part
+
+        branches = list(branch(inp) for i in range(3))
+
+        out = concatenate(branches)
+
+        return L2(out)
+
+    def L2(inp):
+        def two_branch(inp):
+            def branch(inp):
+                part = Conv2D(64, (3, 3), activation='relu')(inp)
+                part = MaxPooling2D(pool_size=(2, 2))(part)
+                part = BatchNormalization()(part)
+                part = Conv2D(128, (3, 3), activation='relu')(part)
+                part = MaxPooling2D(pool_size=(2, 2))(part)
+                part = BatchNormalization()(part)
+                part = Dropout(0.1)(part)
+                return part
+
+            branches = list(branch(inp) for i in range(2))
+
+            out = concatenate(branches)
+
+            return out
+
+        branches = list(two_branch(inp) for i in range(7))
+
+        out = concatenate(branches)
+
+        return L3(out)
+
+    def L3(inp):
+        def two_branch(inp):
+            def branch(inp):
+                part = Conv2D(128, (3, 3), activation='relu')(inp)
+                part = MaxPooling2D(pool_size=(2, 2))(part)
+                part = BatchNormalization()(part)
+                part = Conv2D(128, (3, 3), activation='relu')(part)
+                part = MaxPooling2D(pool_size=(3, 3))(part)
+                part = BatchNormalization()(part)
+                part = Dropout(0.1)(part)
+                return part
+
+            branches = list(branch(inp) for i in range(2))
+
+            out = concatenate(branches)
+
+            return out
+
+        branches = list(two_branch(inp) for i in range(7))
+
+        out = concatenate(branches)
+
+        return out
+
+    inp = Input((280, 280, 3))
+
+    output = L1(inp)
+    output = Flatten()(output)
+    output = Dense(2048, activation='relu')(output)
+    output = Dense(28, activation='linear')(output)
+
+    model = Model(inputs=[inp], outputs=[output])
+    return model
+
+
 if __name__ == "__main__":
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
     os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
@@ -133,14 +212,14 @@ if __name__ == "__main__":
     train_ds.cache()
     train_ds.prefetch(tf.data.AUTOTUNE)
 
-    model = create_three_brunch()
+    model = create_simple_model()
 
     model.compile(optimizer='adam', loss=MeanSquaredError(), metrics=['accuracy'])
 
     # model = models.load_model("models/train_20_4.h5")
 
     plot_model(model,
-               to_file="models/plot_20_5.png",
+               to_file="models/plot_40_10 .png",
                show_dtype=True,
                show_shapes=True,
                show_layer_names=True,
@@ -148,11 +227,11 @@ if __name__ == "__main__":
 
     history = model.fit(train_ds,
                         validation_data=val_ds,
-                        epochs=20,
+                        epochs=40,
                         shuffle=True,
-                        batch_size=8)
+                        batch_size=32)
 
-    model.save("models/train_20_5.h5", save_format="h5")
+    model.save("models/train_40_10.h5", save_format="h5")
 
     ev = model.evaluate(val_ds, verbose=0)
 

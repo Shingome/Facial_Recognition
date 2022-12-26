@@ -35,11 +35,11 @@ transform = al.Compose([
     al.RandomShadow(shadow_roi=(0, 0.5, 1, 1), num_shadows_lower=1, num_shadows_upper=2,
                     shadow_dimension=5, p=0.1),
     al.RandomSnow(snow_point_lower=0.05, snow_point_upper=0.1, brightness_coeff=2, p=0.1),
-    al.InvertImg(p=0.3),
+    al.InvertImg(p=0.4),
     al.HorizontalFlip(p=0.5),
     al.VerticalFlip(p=0.5),
     al.Rotate(p=0.7),
-    al.RandomCrop(240, 240, p=0.4),
+    al.RandomCrop(240, 240, p=0),
     al.Resize(280, 280, p=1)],
     keypoint_params=al.KeypointParams(format='xy', remove_invisible=False),
     p=1)
@@ -55,9 +55,10 @@ for i in range(5000):
     print(i)
     filename = train.iloc[i, 0]
     image = Image.open("train_normal/1/" + filename)
+    image = image.resize((96, 96))
     image.save("train_aug/1/" + filename)
 
-for i in range(5000, 5001):
+for i in range(5000, 20000):
     print(i)
     filename = train.iloc[i % 5000, 0]
     keypoints = train.iloc[i % 5000, 1:].to_numpy()
