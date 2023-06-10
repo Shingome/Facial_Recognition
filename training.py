@@ -36,25 +36,6 @@ def get_dataset(subset):
                                         seed=100)
 
 
-# def create_cnn(inp):
-#     x = Conv2D(32, (5, 5), activation='relu')(inp)
-#     x = MaxPooling2D((2, 2))(x)
-#     x = BatchNormalization()(x)
-#     x = Conv2D(64, (3, 3), activation='relu')(x)
-#     x = MaxPooling2D((2, 2))(x)
-#     x = BatchNormalization()(x)
-#     x = Conv2D(128, (3, 3), activation='relu')(x)
-#     x = MaxPooling2D((2, 2))(x)
-#     x = BatchNormalization()(x)
-#     x = Conv2D(256, (3, 3), activation='relu')(x)
-#     x = MaxPooling2D((2, 2))(x)
-#     x = BatchNormalization()(x)
-#     x = Dropout(0.25)(x)
-#     x = Flatten()(x)
-#     x = Dense(7, activation='linear')(x)
-#
-#     return x
-
 def create_cnn(inp):
     x = Conv2D(32, (3, 3))(inp)
     x = MaxPooling2D((2, 2), strides=2)(x)
@@ -81,22 +62,6 @@ def create_brunch(num):
     out = layers if len(layers) == 1 else concatenate(layers)
     model = Model(inputs=inp, outputs=out)
     return model
-
-
-# def MobileNet():
-#     backbone = keras.applications.MobileNetV2(
-#         weights="imagenet", include_top=False, input_shape=(224, 224, 3)
-#     )
-#     backbone.trainable = False
-#
-#     inputs = layers.Input((224, 224, 3))
-#     x = mobilenet_v2.preprocess_input(inputs)
-#     x = backbone(x)
-#     x = layers.Dropout(0.3)(x)
-#     x = layers.SeparableConv2D(28, kernel_size=5, strides=1, activation="relu")(x)
-#     outputs = layers.SeparableConv2D(28, kernel_size=3, strides=1, activation="sigmoid")(x)
-#
-#     return keras.Model(inputs, outputs)
 
 
 if __name__ == "__main__":
